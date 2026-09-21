@@ -1,14 +1,15 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import { ShopPage } from '../pages/ShopPage';
 
-test('has title', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-  await expect(page).toHaveTitle(/Playwright/);
-});
+test.describe('product search', () => {
+  test('should show no results for bear', async ({ page }) => {
+    const shop = new ShopPage(page);
 
-test('get started link', async ({ page }) => {
-  await page.goto('https://playwright.dev/');
-  await page.getByRole('link', { name: 'Get started' }).click();
-  await expect(
-    page.getByRole('heading', { name: 'Installation' }),
-  ).toBeVisible();
+    await shop.open();
+    await shop.search('bear');
+
+    await expect(page).toHaveURL(/q=bear/);
+    await expect(shop.searchHeading('bear')).toBeVisible();
+    await expect(shop.noResultsMessage).toBeVisible();
+  });
 });
