@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "deny": [
+      "Shell(rm)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Write(.env*)",
+      "Write(.github/**)",
+      "Write(.husky/**)",
+      "Write(.cursor/**)",
+      "Write(playwright.config.ts)",
+      "Write(package.json)",
+      "Write(package-lock.json)",
+      "Write(eslint.config.*)",
+      "Write(.prettierrc*)",
+      "Write(playwright/.auth/**)"
+    ]
+  }
+}
