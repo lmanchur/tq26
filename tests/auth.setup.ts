@@ -2,10 +2,7 @@ import { mkdirSync } from 'node:fs';
 import path from 'node:path';
 import { expect, test as setup } from '@playwright/test';
 import { LoginPage } from '../pages/LoginPage';
-import {
-  BEARSTORE_PASSWORD,
-  BEARSTORE_USERNAME,
-} from '../test-data/bearstore';
+import { BEARSTORE_PASSWORD, BEARSTORE_USERNAME } from '../test-data/bearstore';
 
 const authFile = path.join('playwright', '.auth', 'user.json');
 

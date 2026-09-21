@@ -11,9 +11,7 @@ test.describe('product search', () => {
     await expect(page).toHaveURL(/q=shirt/);
     await expect(shop.searchHeading('shirt')).toBeVisible();
     await expect(shop.noResultsMessage).toBeHidden();
-    await expect(
-      shop.productLink('Sleeveless shirt Meccanica'),
-    ).toBeVisible();
+    await expect(shop.productLink('Sleeveless shirt Meccanica')).toBeVisible();
   });
 
   test('should show no results for bear', async ({ page }) => {
