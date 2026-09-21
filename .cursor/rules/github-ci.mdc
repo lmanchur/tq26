@@ -9,7 +9,9 @@ alwaysApply: false
 Workflow: `.github/workflows/playwright.yml` on push/PR to `main`. Jobs: `lint` then `test`.
 
 - `lint`: `npm ci`, `npm run lint`, `npm run format:check`
-- `test`: `npm ci`, `npx playwright install --with-deps`, `npx playwright test`, upload `playwright-report/`
+- `test`: `npm ci`, `npx playwright install --with-deps`, run Playwright, upload `playwright-report/`
+- On pull requests, prefer a fail-fast `npx playwright test --only-changed=origin/$GITHUB_BASE_REF` (needs `fetch-depth: 0`) **before** the full `npx playwright test` — `--only-changed` is a heuristic and must not replace the full suite on CI
 - Keep `forbidOnly` on CI. Do not skip browsers or ignore failures unless asked.
 - Node LTS only. Timeouts go in job `timeout-minutes` or `playwright.config.ts`.
-- Secrets: `${{ secrets.NAME }}` only.
+- **Real secrets** (e.g. `GOREST_TOKEN`): `${{ secrets.NAME }}` only — never workflow literals.
+- **BearStore** username/password: plaintext `env:` literals (or committed test data) — not repository secrets. See `secrets-security.mdc`.

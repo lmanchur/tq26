@@ -1,21 +1,45 @@
 ---
-description: Run Playwright locally three times in a row and pass before any GitHub push
+description: Run Playwright locally three times in a row against affected tests before any GitHub push
 alwaysApply: true
 ---
 
 # Local tests before GitHub push
 
-Do not `git push`, `gh pr create`, or otherwise publish to GitHub until the full Playwright suite has passed **three consecutive times** locally after the latest change.
+Do not `git push`, `gh pr create`, or otherwise publish to GitHub until the **affected** Playwright tests have passed **three consecutive times** locally after the latest change.
+
+Husky already blocks **commits** unless a single `npm run test:changed` pass succeeds (see `.husky/pre-commit`). The three-run gate below still applies before **push** / PR publish.
 
 ## Required sequence
 
+Prefer Playwright’s change-aware selection (dependency graph over git diffs). Do **not** run the full suite by default.
+
 ```bash
-npx playwright test
-npx playwright test
-npx playwright test
+# Dirty working tree (uncommitted edits)
+npm run test:changed
+
+# Already committed on a branch (compare to the base branch)
+npm run test:changed:main
 ```
 
-All three runs must exit 0. Use the repo’s configured projects (do not drop browsers or use `--last-failed` as a substitute).
+Before push, run whichever form matches the tree **three times**:
+
+```bash
+npm run test:changed:main
+npm run test:changed:main
+npm run test:changed:main
+```
+
+All three runs must exit 0. Keep the repo’s configured projects (do not drop browsers or use `--last-failed` as a substitute).
+
+If `--only-changed` selects zero tests (e.g. docs-only / agent-prompt-only), that counts as a pass — do not force a full suite.
+
+## When to run the full suite instead
+
+Use `npx playwright test` (full suite, still three passes) only when the change can invalidate the dependency heuristic:
+
+- `playwright.config.ts`, `package.json` / lockfile, or CI workflow changes
+- Shared fixtures, global setup/teardown, or auth/`storageState` wiring
+- You are unsure whether unrelated specs import the touched files
 
 ## Reset the count
 
@@ -26,17 +50,23 @@ All three runs must exit 0. Use the repo’s configured projects (do not drop br
 
 ```bash
 # ❌ BAD — one green run, then push
-npx playwright test && git push
+npx playwright test --only-changed=main && git push
 
-# ❌ BAD — skip browsers or reuse a failed-only rerun
+# ❌ BAD — drop browsers or reuse a failed-only rerun
 npx playwright test --project=chromium
+git push
+
+# ❌ BAD — full suite every time when only a few files changed
+npx playwright test
+npx playwright test
+npx playwright test
 git push
 ```
 
 ```bash
-# ✅ GOOD — three full-suite passes, then push
-npx playwright test
-npx playwright test
-npx playwright test
+# ✅ GOOD — three affected-test passes, then push
+npm run test:changed:main
+npm run test:changed:main
+npm run test:changed:main
 git push
 ```

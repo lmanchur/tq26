@@ -9,8 +9,6 @@ import {
 } from '../../dtos/gorest-user';
 
 test.describe('GoRest users API', () => {
-  test.describe.configure({ mode: 'serial' });
-
   test('should return the default user list with valid fields', async ({
     request,
   }) => {
@@ -38,7 +36,10 @@ test.describe('GoRest users API', () => {
 
     const response = await goRestUser.getById(listed.id);
     expect(response.status()).toBe(200);
-    expect(parseUserDto(await response.json())).toEqual(listed);
+    const fetched = parseUserDto(await response.json());
+    // Shared GoRest records can mutate between list and get (e.g. status).
+    expect(fetched.id).toBe(listed.id);
+    expect(fetched.email).toBe(listed.email);
   });
 
   test('should return 404 for a missing user', async ({ request }) => {
@@ -66,7 +67,6 @@ test.describe('GoRest users API', () => {
   test('should create a user and deny access without a valid token', async ({
     request,
   }) => {
-    // Write endpoints require a bearer token from GoRest.
     // eslint-disable-next-line playwright/no-skipped-test -- optional local/CI secret
     test.skip(
       !process.env.GOREST_TOKEN,
@@ -104,7 +104,6 @@ test.describe('GoRest users API', () => {
   });
 
   test('should create, update, and delete a user', async ({ request }) => {
-    // Write endpoints require a bearer token from GoRest.
     // eslint-disable-next-line playwright/no-skipped-test -- optional local/CI secret
     test.skip(
       !process.env.GOREST_TOKEN,
