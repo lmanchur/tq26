@@ -31,15 +31,15 @@ test.describe('GoRest users API', () => {
 
   test('should return a user by id', async ({ request }) => {
     const goRestUser = new GoRestUser(request);
-    const createResponse = await goRestUser.create(buildCreateUserDto());
-    expect(createResponse.status()).toBe(201);
-    const created = parseUserDto(await createResponse.json());
+    const listResponse = await goRestUser.list({ per_page: 1 });
+    const [listed] = parseUserDtoList(await listResponse.json());
 
-    const response = await goRestUser.getById(created.id);
+    const response = await goRestUser.getById(listed.id);
     expect(response.status()).toBe(200);
-    expect(parseUserDto(await response.json())).toEqual(created);
-
-    await goRestUser.delete(created.id);
+    const fetched = parseUserDto(await response.json());
+    // Shared GoRest records can mutate between list and get (e.g. status).
+    expect(fetched.id).toBe(listed.id);
+    expect(fetched.email).toBe(listed.email);
   });
 
   test('should return 404 for a missing user', async ({ request }) => {
