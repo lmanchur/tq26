@@ -1,0 +1,21 @@
+---
+description: Keep changes scoped to the request — no extra frameworks, files, or refactors
+alwaysApply: true
+---
+
+# Anti-over-engineering
+
+Do only what was asked. Prefer the smallest change that works in this Playwright repo.
+
+## Do not
+
+- Add Jest, Cypress, BDD libraries, or extra test runners.
+- Create helpers, fixtures, or page objects "for later" if the task does not need them.
+- Rewrite `playwright.config.ts` or CI as a side effect of a small test change.
+- Refactor unrelated specs. Do not invent folder trees beyond `tests/` and `pages/` unless asked.
+
+## Before finishing
+
+- Diff should match the request.
+- No unused files, dependencies, or comments that restate the code.
+- If two designs work, pick the one that uses Playwright APIs already in the project.

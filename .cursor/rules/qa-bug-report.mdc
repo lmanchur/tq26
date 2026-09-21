@@ -1,0 +1,47 @@
+---
+description: Standardized QA bug reports with repro steps, expected vs actual, and evidence
+alwaysApply: false
+---
+
+# QA bug report
+
+Write one issue per report. Be factual. Do not assign blame.
+
+## Template
+
+```markdown
+# Bug: [what fails] when [condition]
+
+## Description
+Impact in one or two sentences.
+
+## Environment
+- Browser / project: Chromium | Firefox | WebKit
+- OS:
+- App URL / build:
+- Test (if any): `tests/...spec.ts`
+
+## Severity
+Critical | High | Medium | Low | Trivial — plus a one-line why.
+
+## Steps to reproduce
+1.
+2.
+3.
+
+## Expected
+What the user should see.
+
+## Actual
+What happened instead.
+
+## Evidence
+Trace, screenshot, video, or console error. Quote the error; do not dump secrets.
+```
+
+## Rules
+
+- Numbered steps that a stranger can follow.
+- Include exact locator text, URL, and error message when known.
+- If a Playwright test already fails, cite the spec name and the assertion.
+- Suggest a possible cause only when you have evidence from a trace or log.

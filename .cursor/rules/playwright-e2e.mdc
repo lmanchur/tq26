@@ -1,0 +1,35 @@
+---
+description: Playwright E2E test structure — grouping, auto-wait, success and error paths
+globs: tests/**/*.ts,pages/**/*.ts
+alwaysApply: false
+---
+
+# Playwright E2E
+
+Write critical user flows (login, checkout, navigation), not visual CSS checks. Locators and Page Object Model stay in `qa-playwright-standards.mdc`.
+
+## Structure
+
+- Group related cases with `test.describe`.
+- Put shared navigation and route stubs in `test.beforeEach`.
+- Use names that state the behavior: `should show an error for invalid credentials`.
+- Keep a file to about 3–5 focused tests. Cover the happy path and at least one failure path.
+
+## Waiting and assertions
+
+- Use Playwright auto-wait and web-first assertions (`toBeVisible`, `toHaveURL`, `toHaveText`).
+- Never use `page.waitForTimeout`. Do not assert `isVisible()` without `expect`.
+
+```typescript
+// ❌ BAD
+await page.waitForTimeout(2000);
+expect(await page.getByText('Welcome').isVisible()).toBe(true);
+
+// ✅ GOOD
+await expect(page.getByText('Welcome')).toBeVisible();
+```
+
+## Isolation
+
+- Prefer the real app when the flow needs it. Use `page.route` only to stub flaky or external APIs so the UI test stays deterministic.
+- Do not assert colors, fonts, or pixel layout. Assert user-visible outcomes.

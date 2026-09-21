@@ -1,0 +1,36 @@
+---
+description: Playwright fixtures and test isolation — POM fixtures, no shared browser state
+globs: tests/**/*.ts,fixtures/**/*.ts,playwright.config.ts
+alwaysApply: false
+---
+
+# Fixtures and isolation
+
+Every test gets its own `page` and `BrowserContext`. Do not reuse a page, storage, or mutable helper across tests.
+
+## Prefer fixtures over ad-hoc setup
+
+When the same page object is constructed in several specs, extend `test` instead of newing it in every case.
+
+```typescript
+import { test as base } from '@playwright/test';
+import { LoginPage } from '../pages/LoginPage';
+
+export const test = base.extend<{ loginPage: LoginPage }>({
+  loginPage: async ({ page }, use) => {
+    const loginPage = new LoginPage(page);
+    await use(loginPage);
+  },
+});
+
+export { expect } from '@playwright/test';
+```
+
+Put shared fixtures under `fixtures/` and import them from specs. Keep `test` from `@playwright/test` only when no custom fixture is needed.
+
+## Isolation rules
+
+- Do not store data on `page` or module-level variables between tests.
+- Auth belongs in `storageState` / project dependencies when you add it, not in copied login steps everywhere.
+- Clean up in the fixture after `use` if the fixture created extra context or test data.
+- Specs assert outcomes. Fixtures and page objects set up and act; they do not own business assertions.

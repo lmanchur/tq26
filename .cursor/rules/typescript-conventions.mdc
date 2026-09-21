@@ -1,0 +1,37 @@
+---
+description: TypeScript conventions for Playwright page objects, fixtures, and specs
+globs: "**/*.ts"
+alwaysApply: false
+---
+
+# TypeScript conventions
+
+This project is TypeScript-only Playwright automation. Do not add `.js` test or page files.
+
+## Types
+
+- Prefer `const`. Use `let` only when reassignment is required. Never use `var`.
+- Do not use `any`. Use `unknown` at untyped boundaries, then narrow.
+- Import types with `import type`. Page methods should declare an explicit `Promise<void>` (or a real return type).
+
+```typescript
+import { type Page, type Locator } from '@playwright/test';
+
+export class LoginPage {
+  readonly submit: Locator;
+
+  constructor(private readonly page: Page) {
+    this.submit = page.getByRole('button', { name: 'Sign in' });
+  }
+
+  async submitForm(): Promise<void> {
+    await this.submit.click();
+  }
+}
+```
+
+## Style
+
+- Named exports for page classes and fixtures. One page class per file.
+- No unused imports or unused locals.
+- Do not add React, Next.js, or UI-framework patterns. This repo is a test project.

@@ -1,0 +1,35 @@
+---
+description: Conventional commit messages for this Playwright repo
+alwaysApply: false
+---
+
+# Git commits
+
+Only commit when the user asks. Use Conventional Commits.
+
+```
+<type>[optional scope]: <short description>
+```
+
+## Types for this repo
+
+- `test`: new or updated specs / page objects
+- `fix`: flaky test, locator, or CI failure
+- `ci`: GitHub Actions / Playwright config used by CI
+- `chore`: deps, gitignore, non-user-facing cleanup
+- `docs`: README or comment-only docs
+- `refactor`: same behavior, clearer structure
+
+## Style
+
+- Imperative, lowercase description, no trailing period: `test(login): cover invalid password`
+- Scope is optional: `login`, `ci`, `pages`.
+- Body only when the why is not obvious.
+- Do not mention Cursor, co-authors, or tools unless the user asked.
+
+```text
+test(checkout): assert out-of-stock error
+
+The cart API returns 400 when item 3 is unavailable.
+The spec now covers that failure path.
+```

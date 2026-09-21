@@ -1,0 +1,23 @@
+---
+description: GitHub Actions Playwright CI — keep playwright.yml reliable and artifact-friendly
+globs: .github/workflows/**
+alwaysApply: false
+---
+
+# GitHub Actions CI
+
+This repo runs Playwright on push/PR via `.github/workflows/playwright.yml`.
+
+## Keep the workflow honest
+
+- Install with `npm ci`, then `npx playwright install --with-deps`, then `npx playwright test`.
+- Do not add `test.only` / `test.skip` that would hide failures. Config already sets `forbidOnly` on CI.
+- Do not weaken CI by skipping browsers or ignoring failures unless the user asked.
+- Keep the HTML report upload (`playwright-report/`, `if: ${{ !cancelled() }}`).
+
+## When changing CI
+
+- Prefer the existing Node LTS setup. Do not pin a random Node version without a reason.
+- Timeouts belong in `playwright.config.ts` or the job `timeout-minutes`, not `sleep` steps.
+- Secrets in workflows use `${{ secrets.NAME }}` only.
+- Change the workflow only when the user asked for CI work. Do not "improve" it as a side effect of a test change.
