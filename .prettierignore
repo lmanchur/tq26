@@ -5,3 +5,5 @@ blob-report
 playwright/.cache
 package-lock.json
 .cursor
+.env
+.env.*
