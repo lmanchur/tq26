@@ -6,6 +6,7 @@ import {
   parseUserDto,
   parseUserDtoList,
   USER_EMAIL_PATTERN,
+  type UserDto,
 } from '../../dtos/gorest-user';
 
 test.describe('GoRest users API', () => {
@@ -31,15 +32,27 @@ test.describe('GoRest users API', () => {
 
   test('should return a user by id', async ({ request }) => {
     const goRestUser = new GoRestUser(request);
-    const listResponse = await goRestUser.list({ per_page: 1 });
-    const [listed] = parseUserDtoList(await listResponse.json());
+    // Shared GoRest records can disappear between list and get; try a few.
+    const listResponse = await goRestUser.list({ per_page: 10 });
+    expect(listResponse.status()).toBe(200);
+    const users = parseUserDtoList(await listResponse.json());
+    expect(users.length).toBeGreaterThan(0);
 
-    const response = await goRestUser.getById(listed.id);
-    expect(response.status()).toBe(200);
-    const fetched = parseUserDto(await response.json());
-    // Shared GoRest records can mutate between list and get (e.g. status).
-    expect(fetched.id).toBe(listed.id);
-    expect(fetched.email).toBe(listed.email);
+    let listed = users[0];
+    let fetched: UserDto | null = null;
+    for (const candidate of users) {
+      const response = await goRestUser.getById(candidate.id);
+      if (response.status() !== 200) {
+        continue;
+      }
+      listed = candidate;
+      fetched = parseUserDto(await response.json());
+      break;
+    }
+
+    expect(fetched).not.toBeNull();
+    expect(fetched!.id).toBe(listed.id);
+    expect(fetched!.email).toBe(listed.email);
   });
 
   test('should return 404 for a missing user', async ({ request }) => {
