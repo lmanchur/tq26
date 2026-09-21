@@ -9,8 +9,6 @@ import {
 } from '../../dtos/gorest-user';
 
 test.describe('GoRest users API', () => {
-  test.describe.configure({ mode: 'serial' });
-
   test('should return the default user list with valid fields', async ({
     request,
   }) => {
@@ -66,7 +64,6 @@ test.describe('GoRest users API', () => {
   test('should create a user and deny access without a valid token', async ({
     request,
   }) => {
-    // Write endpoints require a bearer token from GoRest.
     // eslint-disable-next-line playwright/no-skipped-test -- optional local/CI secret
     test.skip(
       !process.env.GOREST_TOKEN,
@@ -104,7 +101,6 @@ test.describe('GoRest users API', () => {
   });
 
   test('should create, update, and delete a user', async ({ request }) => {
-    // Write endpoints require a bearer token from GoRest.
     // eslint-disable-next-line playwright/no-skipped-test -- optional local/CI secret
     test.skip(
       !process.env.GOREST_TOKEN,

@@ -21,6 +21,10 @@ export class ShopPage {
     });
   }
 
+  productLink(name: string | RegExp): Locator {
+    return this.page.getByRole('heading', { name }).getByRole('link');
+  }
+
   async open(): Promise<void> {
     await this.page.goto('https://bearstore-testsite.smartbear.com/');
   }

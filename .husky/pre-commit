@@ -1,1 +1,9 @@
-npx tsc --noEmit && npx lint-staged
+#!/usr/bin/env sh
+set -e
+
+npx tsc --noEmit
+npx lint-staged
+
+# Block the commit unless Playwright tests affected by this change pass.
+# Uses git + the suite dependency graph; exits 0 when nothing is selected.
+npm run test:changed

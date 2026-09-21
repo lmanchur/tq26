@@ -44,7 +44,8 @@ Group findings under these categories. Each maps to one rule file — read it if
 - A page object constructed in several specs is extracted into a `test.extend` fixture instead of newed ad hoc every time
 - Fixtures live under `fixtures/` and clean up after `use` if they created extra context or data
 - No module-level or `page`-stored data shared between tests
-- Auth via `storageState` / project dependencies, not copy-pasted login steps
+- BearStore auth via setup project + `storageState` + `fixtures/authenticatedPage` (`authenticatedPage`), not copy-pasted login steps
+- Shared-account mutations (e.g. cart) must not race across parallel browser projects
 
 ### TypeScript conventions (`typescript-conventions.mdc`)
 - `const` by default; `let` only when reassigned; never `var`
@@ -53,11 +54,11 @@ Group findings under these categories. Each maps to one rule file — read it if
 - Named exports, one page class per file, no unused imports/locals
 
 ### Secrets & security (`secrets-security.mdc`)
-- No hardcoded tokens/passwords/cookies/API keys anywhere, including tests and `.cursor/mcp.json`
-- Secrets referenced via `${env:VAR}` or `${{ secrets.NAME }}`, never literals
-- No `.env`, credential JSON, `storageState` files, or private keys committed
+- No hardcoded **real** secrets (API tokens like `GOREST_TOKEN`, private keys) — use `${env:VAR}` or `${{ secrets.NAME }}`
+- **BearStore** username/password are non-sensitive: plaintext in source, workflow `env:`, or `.env.example` is OK; do **not** flag as Critical
+- No committed `playwright/.auth/` storage-state session files or private keys
 - No new dependencies added unless the PR's stated purpose needs them
-- If a secret is found in a tracked file: flag it as **Critical** and tell the user to rotate it — do not echo the value
+- If a **real** secret is found in a tracked file: flag it as **Critical** and tell the user to rotate it — do not echo the value
 
 ### Anti-over-engineering (`anti-overengineering.mdc`)
 - Diff matches the PR's stated purpose — no unrelated refactors bundled in
@@ -71,9 +72,19 @@ Group findings under these categories. Each maps to one rule file — read it if
 - CI workflow / `forbidOnly` untouched unless the PR is about CI
 - If the PR's description or a comment reports a bug, it should follow the `qa-bug-report.mdc` template (repro steps, expected vs actual, evidence)
 
-## Step 4: Run the suite when practical
+## Step 4: Run affected tests when practical
 
-If the diff touches specs, page objects, fixtures, or config **and** it's checked out locally (not just a remote diff you're reading), run `npx playwright test` once to catch anything obviously broken. This is a sanity check, not the three-consecutive-pass push gate — that gate applies only when pushing, not when passively reviewing someone else's diff. Report a failure as **Critical**.
+If the diff touches specs, page objects, fixtures, API clients, or config **and** it's checked out locally (not just a remote diff you're reading), run a **change-aware** sanity check — not the full suite:
+
+```bash
+npx playwright test --only-changed=main
+```
+
+If the working tree is dirty and uncommitted, use `npx playwright test --only-changed` instead.
+
+Fall back to `npx playwright test` only when `playwright.config.ts`, lockfiles, shared fixtures/global setup, or CI workflow changed (same rule as `.cursor/skills/run-playwright-tests/SKILL.md`).
+
+This is a single sanity check, not the three-consecutive-pass push gate. Report a failure as **Critical**.
 
 ## Step 5: Report
 
@@ -83,7 +94,7 @@ Reply with this table, sorted by severity (highest first):
 |----------|----------------------|---------|
 
 Severity guide:
-- **Critical** — hardcoded secret, committed credential/storage-state file, broken test, failing CI check, or a hard rule violation (absolute XPath, `.js` test file, `page.waitForTimeout`)
+- **Critical** — hardcoded **real** secret (e.g. GoRest/GITHUB token), committed `playwright/.auth/` session file, broken test, failing CI check, or a hard rule violation (absolute XPath, `.js` test file, `page.waitForTimeout`). Plaintext BearStore credentials are **not** Critical.
 - **Major** — POM violation, missing test isolation, `any`/untyped boundary, missing failure-path coverage, unrelated scope creep
 - **Minor** — naming, redundant comments, small style drift from the conventions above
 - **Nit** — optional polish

@@ -8,6 +8,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "playwright test",
+    "test:changed": "playwright test --only-changed",
+    "test:changed:main": "playwright test --only-changed=main",
     "typecheck": "tsc --noEmit",
     "prepare": "husky",
     "protect:main": "bash .github/scripts/apply-branch-protection.sh"

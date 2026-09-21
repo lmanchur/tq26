@@ -1,5 +1,5 @@
 ---
-description: Playwright fixtures and test isolation — POM fixtures, no shared browser state
+description: Playwright fixtures and test isolation — POM fixtures, auth storageState, no shared browser state
 globs: tests/**/*.ts,fixtures/**/*.ts,playwright.config.ts
 alwaysApply: false
 ---
@@ -28,9 +28,17 @@ export { expect } from '@playwright/test';
 
 Put shared fixtures under `fixtures/` and import them from specs. Keep `test` from `@playwright/test` only when no custom fixture is needed.
 
+## BearStore auth (`storageState` + `authenticatedPage`)
+
+- Setup project: `tests/auth.setup.ts` logs into BearStore once and writes `playwright/.auth/user.json` (gitignored).
+- UI projects depend on `setup` so the auth file exists before UI specs run.
+- Default `page` stays logged out. Authenticated UI flows import `test` / `expect` from `fixtures/authenticatedPage.ts` and use the `authenticatedPage` fixture (loads `storageState`).
+- BearStore credentials are non-sensitive plaintext — see `secrets-security.mdc`. Prefer constants or env; do not require GitHub Actions secrets for them.
+- Do not copy-paste login steps into every authenticated spec.
+- When tests share one BearStore account and mutate shared server state (e.g. cart), serialize access (file lock / serial mode) so parallel browser projects do not race.
+
 ## Isolation rules
 
 - Do not store data on `page` or module-level variables between tests.
-- Auth belongs in `storageState` / project dependencies when you add it, not in copied login steps everywhere.
 - Clean up in the fixture after `use` if the fixture created extra context or test data.
 - Specs assert outcomes. Fixtures and page objects set up and act; they do not own business assertions.
