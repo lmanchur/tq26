@@ -1,0 +1,42 @@
+---
+description: Run Playwright locally three times in a row and pass before any GitHub push
+alwaysApply: true
+---
+
+# Local tests before GitHub push
+
+Do not `git push`, `gh pr create`, or otherwise publish to GitHub until the full Playwright suite has passed **three consecutive times** locally after the latest change.
+
+## Required sequence
+
+```bash
+npx playwright test
+npx playwright test
+npx playwright test
+```
+
+All three runs must exit 0. Use the repo’s configured projects (do not drop browsers or use `--last-failed` as a substitute).
+
+## Reset the count
+
+- If any run fails, fix the failure, then start over at run 1.
+- If you change specs, page objects, config, or fixtures after a passing streak, start over.
+
+## Do not
+
+```bash
+# ❌ BAD — one green run, then push
+npx playwright test && git push
+
+# ❌ BAD — skip browsers or reuse a failed-only rerun
+npx playwright test --project=chromium
+git push
+```
+
+```bash
+# ✅ GOOD — three full-suite passes, then push
+npx playwright test
+npx playwright test
+npx playwright test
+git push
+```
