@@ -6,12 +6,13 @@ alwaysApply: false
 
 # GitHub Actions CI
 
-Workflow: `.github/workflows/playwright.yml` on push/PR to `main`. Jobs: `lint` then `test`.
+Workflow: `.github/workflows/playwright.yml` on push/PR to `main`, plus `workflow_dispatch` so self-heal can re-verify after a bot push. Jobs: `lint`, `test`, then `self-heal` only when tests fail on an in-repo PR.
 
 - `lint`: `npm ci`, `npm run lint`, `npm run format:check`
 - `test`: `npm ci`, `npx playwright install --with-deps`, run Playwright, upload `playwright-report/`
 - On pull requests, prefer a fail-fast `npx playwright test --only-changed=origin/$GITHUB_BASE_REF` (needs `fetch-depth: 0`) **before** the full `npx playwright test` — `--only-changed` is a heuristic and must not replace the full suite on CI
+- `self-heal`: full-autonomy Cursor CLI job. Prompt at `.github/prompts/self-heal-pr.md` tells the agent to follow `.cursor/skills/fix-playwright-test/SKILL.md` (and `run-playwright-tests` for commands). Agent owns fix-or-ask, commit, push, PR comment, and `workflow_dispatch` re-verify. Not a required status check. No custom heal script.
 - Keep `forbidOnly` on CI. Do not skip browsers or ignore failures unless asked.
 - Node LTS only. Timeouts go in job `timeout-minutes` or `playwright.config.ts`.
-- **Real secrets** (e.g. `GOREST_TOKEN`): `${{ secrets.NAME }}` only — never workflow literals.
+- **Real secrets** (e.g. `GOREST_TOKEN`, `CURSOR_API_KEY`): `${{ secrets.NAME }}` only — never workflow literals.
 - **BearStore** username/password: plaintext `env:` literals (or committed test data) — not repository secrets. See `secrets-security.mdc`.

@@ -4,6 +4,12 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  # Used after a GITHUB_TOKEN push so lint/test re-run (self-heal does not fire).
+  workflow_dispatch:
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
 jobs:
   lint:
     timeout-minutes: 10
@@ -56,3 +62,88 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 30
+  self-heal:
+    name: self-heal
+    needs: test
+    if: >-
+      failure() &&
+      !cancelled() &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    timeout-minutes: 90
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    env:
+      GOREST_TOKEN: ${{ secrets.GOREST_TOKEN }}
+      BEARSTORE_USERNAME: tq26authsetup
+      BEARSTORE_PASSWORD: Tq26Auth!Setup9
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      HEAD_REF: ${{ github.head_ref }}
+      BASE_REF: ${{ github.base_ref }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - name: Skip when Cursor API key is missing
+        id: cursor_key
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        run: |
+          if [ -z "$CURSOR_API_KEY" ]; then
+            printf '%s\n' \
+              '<!-- self-heal -->' \
+              'Self-heal skipped because the `CURSOR_API_KEY` repository secret is not set. Add it under Settings → Secrets and variables → Actions, then re-run the failed tests.' \
+              | gh pr comment "$PR_NUMBER" --body-file -
+            echo "missing=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Download Playwright report
+        if: steps.cursor_key.outputs.missing != 'true'
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: playwright-report
+          path: playwright-report
+      - name: Collect failed job logs
+        if: steps.cursor_key.outputs.missing != 'true'
+        continue-on-error: true
+        run: |
+          mkdir -p self-heal-logs
+          gh run view "${{ github.run_id }}" --log-failed > self-heal-logs/failed-job.log
+      - uses: actions/setup-node@v4
+        if: steps.cursor_key.outputs.missing != 'true'
+        with:
+          node-version: lts/*
+          cache: npm
+      - name: Install dependencies
+        if: steps.cursor_key.outputs.missing != 'true'
+        run: npm ci
+      - name: Install Playwright Browsers
+        if: steps.cursor_key.outputs.missing != 'true'
+        run: npx playwright install --with-deps
+      - name: Install Cursor CLI
+        if: steps.cursor_key.outputs.missing != 'true'
+        run: |
+          curl https://cursor.com/install -fsS | bash
+          echo "$HOME/.cursor/bin" >> "$GITHUB_PATH"
+      - name: Self-heal via fix-playwright-test skill
+        if: steps.cursor_key.outputs.missing != 'true'
+        env:
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch --no-tags origin "$BASE_REF"
+
+          agent -p --force --trust --sandbox disabled --output-format text \
+            "$(cat .github/prompts/self-heal-pr.md)
+
+          Pull request: #${PR_NUMBER}
+          Head branch: ${HEAD_REF}
+          Base branch: ${BASE_REF}
+          Failed run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          "
