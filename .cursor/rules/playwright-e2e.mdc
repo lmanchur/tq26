@@ -10,6 +10,7 @@ Write critical user flows (login, checkout, navigation), not visual CSS checks. 
 
 ## Structure
 
+- Put UI specs in `tests/ui/` and API specs in `tests/api/`.
 - Group related cases with `test.describe`.
 - Put shared navigation and route stubs in `test.beforeEach`.
 - Use names that state the behavior: `should show an error for invalid credentials`.

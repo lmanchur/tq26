@@ -27,7 +27,8 @@ await page.getByLabel('Email').fill('user@example.com');
 ## Page Object Model (POM)
 
 - Enforce the **Page Object Model**: specs orchestrate flows; page objects own locators and actions.
-- Put page objects under `pages/` (e.g. `pages/HomePage.ts`). Specs live under `tests/`.
+- Put page objects under `pages/` (e.g. `pages/HomePage.ts`).
+- UI specs live under `tests/ui/`. API specs live under `tests/api/`. API clients live under `api/`, DTOs under `dtos/`.
 - Page classes accept `Page` in the constructor, expose intent-based methods, and **do not** assert business outcomes (assertions stay in specs unless a dedicated assertion helper is shared).
 
 ```typescript
@@ -50,9 +51,9 @@ export class DocsPage {
   }
 }
 
-// tests/docs.spec.ts
+// tests/ui/docs.spec.ts
 import { test, expect } from '@playwright/test';
-import { DocsPage } from '../pages/DocsPage';
+import { DocsPage } from '../../pages/DocsPage';
 
 test('get started', async ({ page }) => {
   const docs = new DocsPage(page);
@@ -68,3 +69,4 @@ test('get started', async ({ page }) => {
 - [ ] No absolute XPath (or xpath-based locators)
 - [ ] Playwright-provided locators only
 - [ ] New UI interactions go through a page object, not inline in the spec
+- [ ] UI specs are under `tests/ui/`; API specs are under `tests/api/`

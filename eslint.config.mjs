@@ -22,13 +22,17 @@ export default defineConfig(
     },
   },
   {
-    files: ['tests/**/*.ts', 'pages/**/*.ts', 'fixtures/**/*.ts'],
+    files: ['tests/ui/**/*.ts', 'pages/**/*.ts', 'fixtures/**/*.ts'],
     extends: [playwright.configs['flat/recommended']],
     rules: {
       'playwright/no-raw-locators': 'error',
       'playwright/prefer-native-locators': 'error',
       'playwright/no-wait-for-timeout': 'error',
     },
+  },
+  {
+    files: ['tests/api/**/*.ts'],
+    extends: [playwright.configs['flat/recommended']],
   },
   eslintConfigPrettier,
 );

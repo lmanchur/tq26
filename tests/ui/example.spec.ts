@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { ShopPage } from '../pages/ShopPage';
+import { ShopPage } from '../../pages/ShopPage';
 
 test.describe('product search', () => {
   test('should show no results for bear', async ({ page }) => {
