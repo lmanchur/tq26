@@ -1,4 +1,4 @@
-import { type Locator, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 export class ProductPage {
   readonly addToCart: Locator;
@@ -15,8 +15,18 @@ export class ProductPage {
     await this.page.goto(`https://bearstore-testsite.smartbear.com/${slug}`);
   }
 
+  async selectColor(name: string): Promise<void> {
+    await this.page.getByTitle(name, { exact: true }).first().click();
+  }
+
+  async selectLeatherColor(name: string): Promise<void> {
+    await this.page.getByTitle(name, { exact: true }).last().click();
+  }
+
   async addToBasket(): Promise<void> {
-    await this.addToCart.click();
-    await this.goToCart.waitFor({ state: 'visible' });
+    await expect(async () => {
+      await this.addToCart.click();
+      await expect(this.goToCart).toBeVisible({ timeout: 5_000 });
+    }).toPass({ timeout: 20_000 });
   }
 }
