@@ -1,4 +1,4 @@
-import { type Locator, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 export class CartPage {
   readonly heading: Locator;
@@ -25,21 +25,34 @@ export class CartPage {
     return this.page.getByRole('cell', { name: amount, exact: true });
   }
 
+  colorText(color: string): Locator {
+    return this.page.getByText(`Color: ${color}`);
+  }
+
+  leatherColorText(color: string): Locator {
+    return this.page.getByText(`Leather color: ${color}`);
+  }
+
   async open(): Promise<void> {
     await this.page.goto('https://bearstore-testsite.smartbear.com/cart');
   }
 
+  async startCheckout(): Promise<void> {
+    await this.checkout.click();
+    await this.page.getByRole('heading', { name: 'Billing address' }).waitFor({
+      state: 'visible',
+    });
+  }
+
   async clear(): Promise<void> {
     await this.open();
-    while ((await this.removeButtons.count()) > 0) {
-      const remove = this.removeButtons.first();
-      const productName = await remove.getAttribute('data-name');
-      await remove.click();
-      if (productName) {
-        await this.productLink(productName).waitFor({ state: 'hidden' });
-      } else {
-        await remove.waitFor({ state: 'hidden' });
+    for (;;) {
+      const remaining = await this.removeButtons.count();
+      if (remaining === 0) {
+        return;
       }
+      await this.removeButtons.first().click();
+      await expect(this.removeButtons).toHaveCount(remaining - 1);
     }
   }
 }

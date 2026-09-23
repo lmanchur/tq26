@@ -1,6 +1,5 @@
-import { mkdir, unlink, writeFile } from 'node:fs/promises';
-import path from 'node:path';
 import { expect, test } from '../../fixtures/authenticatedPage';
+import { registerSharedCartLock } from '../../fixtures/cartLock';
 import { CartPage } from '../../pages/CartPage';
 import { ProductPage } from '../../pages/ProductPage';
 import { BEARSTORE_USERNAME } from '../../test-data/bearstore';
@@ -19,32 +18,9 @@ const CHRONOGRAPH = {
 
 const expectedTotal = DRIVER.price + CHRONOGRAPH.price;
 const expectedTotalText = `$${expectedTotal.toLocaleString('en-US')}.00`;
-const cartLockPath = path.join('playwright', '.auth', 'cart.lock');
-
-async function acquireCartLock(): Promise<void> {
-  await mkdir(path.dirname(cartLockPath), { recursive: true });
-  for (;;) {
-    try {
-      await writeFile(cartLockPath, String(process.pid), { flag: 'wx' });
-      return;
-    } catch {
-      await new Promise((resolve) => setTimeout(resolve, 250));
-    }
-  }
-}
-
-async function releaseCartLock(): Promise<void> {
-  await unlink(cartLockPath).catch(() => undefined);
-}
 
 test.describe('authenticated cart', () => {
-  test.beforeAll(async () => {
-    await acquireCartLock();
-  });
-
-  test.afterAll(async () => {
-    await releaseCartLock();
-  });
+  registerSharedCartLock(test);
 
   test('should show the correct total after adding driver and chronograph', async ({
     authenticatedPage,
